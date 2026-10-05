@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "168477283443",
+    "project_id": "calander-b9fe9",
+    "storage_bucket": "calander-b9fe9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:168477283443:android:daa43842d2162123d44606",
+        "android_client_info": {
+          "package_name": "com.calendar.getx_ecommerce"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhF0mmYlF9Jr300gIqNlC8lizNsfxxdBw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

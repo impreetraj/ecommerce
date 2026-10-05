@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_ecommerce/Screens/bottomNavigationBar.dart';
-import 'package:getx_ecommerce/Screens/homepage.dart';
 import 'package:getx_ecommerce/Screens/loginpage.dart';
-import 'package:getx_ecommerce/localdatabase/register_db.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Splashpage extends StatefulWidget {
   const Splashpage({super.key});
@@ -20,11 +19,11 @@ class _SplashpageState extends State<Splashpage> {
   }
 
   Future<void> _checkLoginStatus() async {
-    await Future.delayed(const Duration(seconds: 3));
-    final isLoggedIn = await RegisterDb.instance.getLoginStatus();
+    await Future.delayed(const Duration(seconds: 2));
+    final currentUser = FirebaseAuth.instance.currentUser;
 
-    if (isLoggedIn) {
-      Get.offAll(() => const bottomnavbar());
+    if (currentUser != null) {
+      Get.offAll(() => const BottomNavbar());
     } else {
       Get.offAll(() => const Loginpage());
     }
@@ -37,7 +36,7 @@ class _SplashpageState extends State<Splashpage> {
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF4A00E0), Color(0xFF8E2DE2)],
+            colors: [Color(0xFFFF4B2B), Color(0xFFFF7152)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -45,45 +44,51 @@ class _SplashpageState extends State<Splashpage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Spacer(flex: 2),
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 25,
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
               child: const Icon(
                 Icons.shopping_bag_rounded,
                 size: 80,
-                color: Color(0xFF6713D2),
+                color: Color(0xFFFF4B2B),
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 35),
             const Text(
-              "E-COMMERCE",
+              "IKOKAS SHOP",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+                fontSize: 34,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 2.5,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               "Your Premium Store",
               style: TextStyle(
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withOpacity(0.9),
                 fontSize: 16,
-                letterSpacing: 1.2,
+                letterSpacing: 1.5,
                 fontWeight: FontWeight.w500,
               ),
             ),
+            const Spacer(flex: 1),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+            const Spacer(flex: 1),
           ],
         ),
       ),

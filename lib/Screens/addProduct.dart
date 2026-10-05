@@ -15,7 +15,7 @@ class Addproduct extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Add Product'),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xFFFF4B2B),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -31,8 +31,8 @@ class Addproduct extends StatelessWidget {
                   height: 140,
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: Colors.black,
-                      width: 1,
+                      color: const Color(0xFFFF4B2B),
+                      width: 1.5,
                     ),
                     borderRadius: BorderRadius.circular(15),
                   ),
@@ -41,11 +41,12 @@ class Addproduct extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
                             Icon(Icons.add_a_photo,
-                                size: 60, color: Colors.black),
+                                size: 60, color: Color(0xFFFF4B2B)),
+                            SizedBox(height: 8),
                             Text(
                               'Add Product Image',
                               style: TextStyle(
-                                  color: Colors.black, fontSize: 16),
+                                  color: Color(0xFFFF4B2B), fontSize: 16, fontWeight: FontWeight.w600),
                             )
                           ],
                         )
@@ -90,6 +91,11 @@ class Addproduct extends StatelessWidget {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF4B2B),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
                   onPressed: productController.saveProduct,
                   child: const Text(
                     'Add Product',

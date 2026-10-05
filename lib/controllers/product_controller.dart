@@ -1,31 +1,51 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:realm/realm.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:getx_ecommerce/models/product.dart';
-import 'package:flutter/material.dart';
 
 class ProductController extends GetxController {
   final nameController = TextEditingController();
   final priceController = TextEditingController();
   final descriptionController = TextEditingController();
-  
+
   final imagePath = ''.obs;
-  
   final products = <Product>[].obs;
-  
-  late Realm realm;
-  
+  final searchQuery = ''.obs;
+  final isLoading = false.obs;
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  List<Product> get filteredProducts {
+    if (searchQuery.value.isEmpty) {
+      return products;
+    }
+    return products
+        .where((product) =>
+            product.name.toLowerCase().contains(searchQuery.value.toLowerCase()))
+        .toList();
+  }
+
+  Product? getProduct(String id) {
+    return products.firstWhereOrNull((p) => p.id == id);
+  }
+
   @override
   void onInit() {
     super.onInit();
-    final config = Configuration.local([Product.schema, CartItem.schema]);
-    realm = Realm(config);
-    fetchProducts();
+    bindProductsStream();
   }
 
-  void fetchProducts() {
-    products.assignAll(realm.all<Product>());
+  void bindProductsStream() {
+    _firestore.collection('products').snapshots().listen((snapshot) {
+      products.value = snapshot.docs.map((doc) {
+        return Product.fromFirestore(doc);
+      }).toList();
+    }, onError: (e) {
+      debugPrint("Error fetching products from Firestore: $e");
+    });
   }
 
   @override
@@ -33,7 +53,6 @@ class ProductController extends GetxController {
     nameController.dispose();
     priceController.dispose();
     descriptionController.dispose();
-    realm.close();
     super.onClose();
   }
 
@@ -41,15 +60,23 @@ class ProductController extends GetxController {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      imagePath.value = pickedFile.path;
+      final appDir = await getApplicationDocumentsDirectory();
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}';
+      final savedImage =
+          await File(pickedFile.path).copy('${appDir.path}/$fileName');
+      imagePath.value = savedImage.path;
     }
   }
 
-  void saveProduct() {
+  Future<void> saveProduct() async {
     if (nameController.text.isEmpty ||
         priceController.text.isEmpty ||
         descriptionController.text.isEmpty ||
         imagePath.value.isEmpty) {
+      if (Get.isSnackbarOpen) {
+        Get.closeAllSnackbars();
+      }
       Get.snackbar(
         'Error',
         'All fields and image are required!',
@@ -61,33 +88,47 @@ class ProductController extends GetxController {
     }
 
     final price = double.tryParse(priceController.text) ?? 0.0;
-    
-    final product = Product(
-      ObjectId(),
-      nameController.text.trim(),
-      price,
-      descriptionController.text.trim(),
-      imagePath.value,
-    );
 
-    realm.write(() {
-      realm.add(product);
-    });
+    try {
+      isLoading.value = true;
+      await _firestore.collection('products').add({
+        'name': nameController.text.trim(),
+        'price': price,
+        'description': descriptionController.text.trim(),
+        'imagePath': imagePath.value,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-    Get.snackbar(
-      'Success',
-      'Product added successfully!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+      if (Get.isSnackbarOpen) {
+        Get.closeAllSnackbars();
+      }
+      Get.snackbar(
+        'Success',
+        'Product added successfully to Firebase!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
 
-    // clear fields
-    nameController.clear();
-    priceController.clear();
-    descriptionController.clear();
-    imagePath.value = '';
-    
-    fetchProducts();
+      nameController.clear();
+      priceController.clear();
+      descriptionController.clear();
+      imagePath.value = '';
+
+      Get.back();
+    } catch (e) {
+      if (Get.isSnackbarOpen) {
+        Get.closeAllSnackbars();
+      }
+      Get.snackbar(
+        'Error',
+        'Failed to save product: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

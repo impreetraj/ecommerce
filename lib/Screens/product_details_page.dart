@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:getx_ecommerce/models/product.dart';
 import 'package:getx_ecommerce/controllers/cart_controller.dart';
+import 'package:getx_ecommerce/controllers/product_controller.dart';
 import 'package:getx_ecommerce/Screens/cartpage.dart';
+import 'package:getx_ecommerce/Screens/Address_screens.dart';
+import 'package:getx_ecommerce/models/order.dart';
 
 class ProductDetailsPage extends StatelessWidget {
   final Product product;
@@ -11,6 +14,16 @@ class ProductDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!product.isValid) {
+      // If hot-reloaded and object invalidated, just return an empty screen to prevent crash
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (Get.isRegistered<ProductController>()) {
+           Get.back();
+        }
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final cartController = Get.put(CartController());
     return Scaffold(
       backgroundColor: Colors.white,
@@ -175,6 +188,9 @@ class ProductDetailsPage extends StatelessWidget {
                       ),
                       onPressed: () {
                         cartController.addToCart(product);
+                        if (Get.isSnackbarOpen) {
+                          Get.closeAllSnackbars();
+                        }
                         Get.snackbar(
                           'Added to Cart',
                           '${product.name} was added to your cart',
@@ -203,14 +219,17 @@ class ProductDetailsPage extends StatelessWidget {
                         elevation: 0,
                       ),
                       onPressed: () {
-                        Get.snackbar(
-                          'Buy Now',
-                          '${product.name} Success to Buy',
-                          snackPosition: SnackPosition.TOP,
-                          backgroundColor: Colors.green,
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 2),
-                        );
+                        Get.to(() => AddressScreens(
+                          totalAmount: product.price,
+                          items: [
+                            OrderItem(
+                              id: DateTime.now().millisecondsSinceEpoch.toString(),
+                              productId: product.id,
+                              quantity: 1,
+                            ),
+                          ],
+                          isFromCart: false,
+                        ));
                       },
                       child: const Text(
                         'Buy Now',

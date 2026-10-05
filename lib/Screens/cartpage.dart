@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:getx_ecommerce/Screens/Address_screens.dart';
 import 'package:getx_ecommerce/controllers/cart_controller.dart';
 import 'package:getx_ecommerce/controllers/product_controller.dart';
+import 'package:getx_ecommerce/models/order.dart';
 
 class Cartpage extends StatelessWidget {
   const Cartpage({super.key});
@@ -10,16 +12,16 @@ class Cartpage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cartController = Get.put(CartController());
-    final productController = Get.put(ProductController());
+    Get.put(ProductController());
 
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: const Text('My Cart', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
-        shadowColor: Colors.black12,
+        title: const Text('My Cart', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        backgroundColor: const Color(0xFFFF4B2B),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
       ),
       body: Obx(() {
         if (cartController.cartItems.isEmpty) {
@@ -40,7 +42,7 @@ class Cartpage extends StatelessWidget {
                   itemCount: cartController.cartItems.length,
                   itemBuilder: (context, index) {
                     final cartItem = cartController.cartItems[index];
-                    final product = productController.products.firstWhereOrNull((p) => p.id == cartItem.productId);
+                    final product = cartController.getProduct(cartItem.productId);
           
                     if (product == null) {
                       return const SizedBox.shrink(); 
@@ -212,29 +214,35 @@ class Cartpage extends StatelessWidget {
                           ),
                           const Text(
                             'View price details',
-                            style: TextStyle(color: Color(0xFF6713D2), fontSize: 12, fontWeight: FontWeight.w500),
+                            style: TextStyle(color: Color(0xFFFF4B2B), fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFB641B), // Flipkart Orange color for checkout button
+                        backgroundColor: const Color(0xFFFF4B2B), 
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4), // Square-ish corners like flipkart
+                          borderRadius: BorderRadius.circular(4), 
                         ),
                         elevation: 0,
                       ),
                       onPressed: () {
-                        Get.snackbar(
-                          'Success',
-                          'Order placed successfully!',
-                          snackPosition: SnackPosition.TOP,
-                          backgroundColor: Colors.green,
-                          colorText: Colors.white,
-                        );
+                        final items = cartController.cartItems.map((cartItem) {
+                          return OrderItem(
+                            id: cartItem.id,
+                            productId: cartItem.productId,
+                            quantity: cartItem.quantity,
+                          );
+                        }).toList();
+                        
+                        Get.to(() => AddressScreens(
+                          totalAmount: cartController.totalPrice,
+                          items: items,
+                          isFromCart: true,
+                        ));
                       },
                       child: const Text(
                         'Place Order',
